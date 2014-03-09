@@ -1,0 +1,14 @@
+
+Event loop: 
+
+	[] Use pyserial to wait for button press
+
+	[] Do nothing (some vis/screensaver??) until button press
+
+	[] On button press:
+		[] Start 3 second countdown onscreen (as fast as we can render!!)
+		[] after 3 seconds, launch gphoto2 to take picture (may need lead time)
+		[] Show spinner to user, wait for gphoto2 to take
+
+		[] create thumbnail, display onscreen for at least 30 seconds, 
+			[] intteruptable if user presses button
