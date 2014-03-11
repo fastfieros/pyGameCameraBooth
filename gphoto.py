@@ -4,6 +4,7 @@ import subprocess
 import time
 import threading
 import Queue
+from events import *
 
 exe = "gphoto2"
 
@@ -26,10 +27,6 @@ def captureAndDownload():
 		print "%s returned (%d): \"%s\""%(exe, cpe.returncode, cpe.output)
 
 		return None
-		
-class photo():
-	type = "photo"
-	name = None
 
 class photoTaker(threading.Thread):
 	def __init__(self, q=None):

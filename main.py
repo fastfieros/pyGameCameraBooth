@@ -6,9 +6,7 @@ from thumbnail import getThumbnail
 from gphoto import captureAndDownload, registerPhotoEvent
 import ubw
 import Queue
-
-class startover():
-	type="startover"
+from events import *
 
 screen = pygame.display.set_mode((800, 600), pygame.FULLSCREEN)
 running = 1

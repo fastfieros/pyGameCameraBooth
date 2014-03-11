@@ -3,6 +3,7 @@ import os,time
 import threading
 import serial
 import Queue
+from events import *
 
 class flag():
 	def __init__(self, init=True):
@@ -13,9 +14,6 @@ class flag():
 
 	def go(self):
 		return self.value
-
-class press():
-	type = "press"
 
 class ubw(threading.Thread):
 
