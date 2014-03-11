@@ -1,7 +1,7 @@
 
 Event loop: 
 
-	[] Use pyserial to wait for button press
+	[x] Use pyserial to wait for button press
 
 	[] Do nothing (some vis/screensaver??) until button press
 

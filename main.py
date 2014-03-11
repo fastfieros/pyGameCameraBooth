@@ -1,26 +1,83 @@
 #!/usr/bin/env python
 
-
+import os,sys
 import pygame
+from thumbnail import getThumbnail
+from gphoto import captureAndDownload, registerPhotoEvent
+import ubw
+import Queue
 
-#screen = pygame.display.set_mode((1024, 768))
+class startover():
+	type="startover"
+
 screen = pygame.display.set_mode((800, 600), pygame.FULLSCREEN)
 running = 1
 
 pygame.mouse.set_visible(False)
+
+pygame.font.init()
+
+myq = Queue.Queue()
+myq.put(startover())
+
+myfont = pygame.font.SysFont("helvetica", 15)
+
+img=None
+
+def getImage(original):
+	
+	print "Thumbing %s"%original
+	thumb = getThumbnail(original)
+	if not thumb:
+		return None
+
+	print "finished Thumbing %s, to %s "%(original, thumb)
+	myq.put(startover())
+	return pygame.image.load(thumb)
+
+
+state = 0
 
 while running:
 	event = pygame.event.poll()
 	if event.type == pygame.QUIT:
 		running = 0
 
-	screen.fill((32,32,32))
 
-	blue = 0, 0, 255	
-	point1 = 0, 0
-	point2 = 200, 100
-	#pygame.draw.line(screen, blue, point1, point2)
-	pygame.draw.line(screen, (0, 0, 255), (0, 0), (639, 479))
-	pygame.draw.aaline(screen, (0, 0, 255), (639, 0), (0, 479))
+	### HANDLE QUEUED TASKS ###
+	screen.fill((32,32,32))
+	if not myq.empty():
+		item = myq.get_nowait()
+
+		if item.type == "startover":
+			state = 0
+			ubw.registerPinEvent(myq)
+
+		elif item.type == "press":
+			state = 1
+			registerPhotoEvent(myq)
+
+		elif item.type == "photo":
+			state = 2
+			img = getImage(item.name)
+
+
+	### GENERATE DISPLAY BASED ON STATE ####
+
+	if state == 0:
+		label = myfont.render("waiting for button press..", 1, (255,255,0))
+		screen.blit(label, (40,540))
+
+		if img:
+			screen.blit(img, (0,0))
+
+	elif state == 1:
+		label = myfont.render("taking picture!", 1, (255,255,0))
+		screen.blit(label, (40,540))
+
+	elif state == 2:
+		label = myfont.render("generating thumbnail..", 1, (255,255,0))
+		screen.blit(label, (40,540))
 
 	pygame.display.flip()
+

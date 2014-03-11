@@ -4,8 +4,6 @@ import threading
 import serial
 import Queue
 
-UBW_PRESS=0xDEADBEEF
-
 class flag():
 	def __init__(self, init=True):
 		self.value = init
@@ -15,6 +13,9 @@ class flag():
 
 	def go(self):
 		return self.value
+
+class press():
+	type = "press"
 
 class ubw(threading.Thread):
 
@@ -55,7 +56,7 @@ class ubw(threading.Thread):
 		print "(ubw) Button Pressed!"
 
 		if self.q:
-			self.q.put(UBW_PRESS)
+			self.q.put(press())
 
 	def run(self):
 		if self.flag: #if a flag is defined, loop until it is set

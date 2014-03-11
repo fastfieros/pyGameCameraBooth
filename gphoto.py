@@ -2,6 +2,8 @@
 
 import subprocess
 import time
+import threading
+import Queue
 
 exe = "gphoto2"
 
@@ -16,8 +18,8 @@ def captureAndDownload():
 			stderr=subprocess.STDOUT,
 			shell=True)
 
-		print output
 
+		print "(gphoto) captured: \"%s\""%(filename)
 		return filename
 
 	except subprocess.CalledProcessError as cpe:
@@ -25,7 +27,30 @@ def captureAndDownload():
 
 		return None
 		
+class photo():
+	type = "photo"
+	name = None
+
+class photoTaker(threading.Thread):
+	def __init__(self, q=None):
+		self.q = q
+		threading.Thread.__init__(self)
+	
+	def run(self):
+	
+		p = photo()
+		p.name = captureAndDownload()
+
+		if self.q:
+			self.q.put(p)
+
+def registerPhotoEvent(q=None):
+	mythread = photoTaker(q)
+	mythread.start()    #start the waiter
+	return mythread
+
 
 if __name__ == "__main__":
 
-	print captureAndDownload()
+	#print captureAndDownload()
+	registerPhotoEvent()
