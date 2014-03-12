@@ -8,7 +8,7 @@ from events import *
 
 exe = "gphoto2"
 
-def captureAndDownload():
+def captureAndDownload(p):
 	filename = time.strftime("%y%m%d_%H%M%S.jpg")
 	action = "--capture-image-and-download"
 
@@ -20,13 +20,22 @@ def captureAndDownload():
 			shell=True)
 
 
-		print "(gphoto) captured: \"%s\""%(filename)
-		return filename
+		print "(gphoto) output\n@@@@@@@\n%s\n@@@@@@@\n\n"%(output)
+
+		if -1 == output.lower().find("error"):
+
+			print "(gphoto) captured: \"%s\""%(filename)
+			p.name = filename
+
+		else:
+			p.name = None
+			p.message = "%s returned: \"%s\""%(exe, output)
 
 	except subprocess.CalledProcessError as cpe:
 		print "%s returned (%d): \"%s\""%(exe, cpe.returncode, cpe.output)
 
-		return None
+		p.name = None
+ 		p.message = "%s returned (%d): \"%s\""%(exe, cpe.returncode, cpe.output)
 
 class photoTaker(threading.Thread):
 	def __init__(self, q=None):
@@ -36,7 +45,7 @@ class photoTaker(threading.Thread):
 	def run(self):
 	
 		p = photo()
-		p.name = captureAndDownload()
+		captureAndDownload(p)
 
 		if self.q:
 			self.q.put(p)

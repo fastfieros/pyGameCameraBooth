@@ -20,6 +20,7 @@ class ubw(threading.Thread):
 	DEVICE = "/dev/ttyACM0"
 	PROBE  = "PI,C,2\r"
 	MATCH  = "PI,0\r\n"
+	kill=False
 
 	def __init__(self, q=None, flag=None):
 
@@ -49,10 +50,12 @@ class ubw(threading.Thread):
 	def waitForPin(self):
 
 		while True != self.checkPin():
+			if self.kill:
+				self.cleanup()
+				return None
+
 			time.sleep(self.sleep)
 		
-		print "(ubw) Button Pressed!"
-
 		if self.q:
 			self.q.put(press())
 
