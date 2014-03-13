@@ -20,11 +20,11 @@ def captureAndDownload(p):
 			shell=True)
 
 
-		print "(gphoto) output\n@@@@@@@\n%s\n@@@@@@@\n\n"%(output)
+		#print "(gphoto) output\n@@@@@@@\n%s\n@@@@@@@\n\n"%(output)
 
 		if -1 == output.lower().find("error"):
 
-			print "(gphoto) captured: \"%s\""%(filename)
+			#print "(gphoto) captured: \"%s\""%(filename)
 			p.name = filename
 
 		else:

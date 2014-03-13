@@ -23,6 +23,7 @@ myq.put(startover())
 myfont = pygame.font.SysFont("helvetica", 15)
 consolefont = pygame.font.SysFont("DejaVu Sans Mono", 12)
 bigfont = pygame.font.SysFont("helvetica", 85)
+hugefont = pygame.font.SysFont("DejaVu Sans", 245)
 
 img=None #Last photograph taken
 pe=None  #pin event
@@ -30,13 +31,13 @@ countdownEnd=None
 
 def getImage(original):
 	
-	print "Thumbing %s"%original
+	#print "Thumbing %s"%original
 	thumb = getThumbnail(original)
 	if not thumb:
 		return None
 
-	print "finished Thumbing %s, to %s "%(original, thumb)
-	myq.put(startover())
+	#print "finished Thumbing %s, to %s "%(original, thumb)
+	myq.put(preview())
 	return pygame.image.load(thumb)
 
 
@@ -68,8 +69,11 @@ try:
 					state = 99
 					message = item.message
 				else:
-					state = 2
 					img = getImage(item.name)
+
+			elif item.type == "preview":
+				countdownEnd = time.time() + 5
+				state = 6
 
 
 		### GENERATE DISPLAY BASED ON STATE ####
@@ -79,48 +83,37 @@ try:
 			screen.blit(label, (40,540))
 
 			# show last 5 or so images!
-			if img:
-				screen.blit(img, (0,0))
+			#if miniImg:
+			#	screen.blit(img, (0,0))
 
 		elif state == 3 or state == 4:
 			timeleft = countdownEnd - time.time() 
-			if state == 3 and timeleft <= 1.0:
+			if state == 3 and timeleft <= 1.2:
 				registerPhotoEvent(myq)
 				state = 4
 
 			if state == 4 and timeleft <= 0:
-				countdownEnd = time.time() + 1
-				state = 5	
-
-			else:
-				label = bigfont.render("%.3f"%timeleft, 1, (0,255,0))
-				screen.blit(label, (240,240))
-
-		elif state == 5:
-			screen.fill((255,255,255))
-			timeleft = countdownEnd - time.time() 
-
-			if timeleft <= 0:
 				timebar = timeoutBar(screen, 4.8)
 				state = 1
 
 			else:
-				label = bigfont.render("Smile!", 1, (0,128,128))
-				screen.blit(label, (240,240))
+				label = hugefont.render("%.1f"%timeleft, 1, (0,255,0))
+				screen.blit(label, (120,120))
+
 
 		elif state == 1:
-			label = myfont.render("taking picture!", 1, (255,255,0))
+			label = myfont.render("transferring picture..", 1, (255,255,0))
 			screen.blit(label, (40,540))
-			
 			timebar.update()
 
-		elif state == 2:
-			label = myfont.render("generating thumbnail..", 1, (255,255,0))
-			screen.blit(label, (40,540))
+		elif state == 6:
+			timeleft = countdownEnd - time.time() 
+			screen.blit(img, (0,0))
 
-		#state 4: display fullsize image 
-		# 	in 5 seconds, change to state 0
+			if timeleft <= 0:
+				myq.put(startover())
 
+		## ERROR STATE ##
 		elif state == 99:
 			label = bigfont.render("ERROR!!", 1, (255,0,0))
 			screen.blit(label, (40,40))
