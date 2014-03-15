@@ -8,6 +8,25 @@ from events import *
 
 exe = "gphoto2"
 
+def disableAutoOff():
+	emc = "gphoto2 --set-config /main/settings/autopoweroff=0"
+	try:
+		output = subprocess.check_output(cmd,
+			stderr=subprocess.STDOUT,
+			shell=True)
+
+		if -1 == output.lower().find("error"):
+			return True
+
+		else:
+			print output
+			return False
+
+	except subprocess.CalledProcessError as cpe:
+		print output
+		return False
+
+
 def captureAndDownload(p):
 	filename = time.strftime("%y%m%d_%H%M%S.jpg")
 	action = "--capture-image-and-download"

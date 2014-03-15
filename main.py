@@ -41,6 +41,8 @@ def getImage(original):
 	return pygame.image.load(thumb)
 
 
+disableAutoOff()
+
 state = 0
 try:
 	while running:
