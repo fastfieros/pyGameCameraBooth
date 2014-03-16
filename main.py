@@ -3,13 +3,16 @@
 import os,sys,time
 import pygame
 from thumbnail import getThumbnail
-from gphoto import captureAndDownload, registerPhotoEvent
+from gphoto import captureAndDownload, registerPhotoEvent, disableAutoOff
 import ubw
 import Queue
 from events import *
 from loadingbox import progressBar, timeoutBar
 
-screen = pygame.display.set_mode((800, 600), pygame.FULLSCREEN)
+resolution = (1024, 768)
+
+screen = pygame.display.set_mode(resolution, pygame.FULLSCREEN)
+#screen = pygame.display.set_mode((800, 600), pygame.FULLSCREEN)
 
 running = 1
 
@@ -32,7 +35,7 @@ countdownEnd=None
 def getImage(original):
 	
 	#print "Thumbing %s"%original
-	thumb = getThumbnail(original)
+	thumb = getThumbnail(original, resolution)
 	if not thumb:
 		return None
 
@@ -41,7 +44,7 @@ def getImage(original):
 	return pygame.image.load(thumb)
 
 
-disableAutoOff()
+#disableAutoOff()
 
 state = 0
 try:
