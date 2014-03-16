@@ -23,10 +23,10 @@ pygame.font.init()
 myq = Queue.Queue()
 myq.put(startover())
 
-myfont = pygame.font.SysFont("helvetica", 15)
+myfont = pygame.font.SysFont("helvetica", 24)
 consolefont = pygame.font.SysFont("DejaVu Sans Mono", 12)
-bigfont = pygame.font.SysFont("helvetica", 85)
-hugefont = pygame.font.SysFont("DejaVu Sans", 245)
+bigfont = pygame.font.SysFont("helvetica", 125)
+hugefont = pygame.font.SysFont("DejaVu Sans", 300)
 
 img=None #Last photograph taken
 pe=None  #pin event
@@ -44,7 +44,7 @@ def getImage(original):
 	return pygame.image.load(thumb)
 
 
-#disableAutoOff()
+disableAutoOff()
 
 state = 0
 try:

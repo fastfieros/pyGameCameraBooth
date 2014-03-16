@@ -9,7 +9,7 @@ from events import *
 exe = "gphoto2"
 
 def disableAutoOff():
-	emc = "gphoto2 --set-config /main/settings/autopoweroff=0"
+	cmd = "gphoto2 --set-config /main/settings/autopoweroff=0"
 	try:
 		output = subprocess.check_output(cmd,
 			stderr=subprocess.STDOUT,
