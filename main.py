@@ -76,6 +76,13 @@ try:
 				else:
 					img = getImage(item.name)
 
+			elif item.type == "downloading":
+				if item.progress == 1:
+					state=6
+				else:
+					img = getImage(item.name)
+					state=1
+
 			elif item.type == "preview":
 				countdownEnd = time.time() + 5
 				state = 6
@@ -97,9 +104,9 @@ try:
 				registerPhotoEvent(myq)
 				state = 4
 
-			if state == 4 and timeleft <= 0:
-				timebar = timeoutBar(screen, 4.8)
-				state = 1
+			#if state == 4 and timeleft <= 0:
+			#	timebar = timeoutBar(screen, 4.8)
+			#	state = 1
 
 			else:
 				label = hugefont.render("%.1f"%timeleft, 1, (0,255,0))
@@ -109,7 +116,6 @@ try:
 		elif state == 1:
 			label = myfont.render("transferring picture..", 1, (255,255,0))
 			screen.blit(label, (40,540))
-			timebar.update()
 
 		elif state == 6:
 			timeleft = countdownEnd - time.time() 
