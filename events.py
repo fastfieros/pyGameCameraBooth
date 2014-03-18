@@ -18,6 +18,10 @@ class photo(event):
 	type = "photo"
 	name = None
 
+	def __init__(self, name=None):
+		self.name=name
+
+
 class downloading(event):
 	type="downloading"
 	progress=0

@@ -75,13 +75,11 @@ try:
 					message = item.message
 				else:
 					img = getImage(item.name)
+					countdownEnd = time.time() + 5
+					state=6
 
 			elif item.type == "downloading":
-				if item.progress == 1:
-					state=6
-				else:
-					img = getImage(item.name)
-					state=1
+				state=1
 
 			elif item.type == "preview":
 				countdownEnd = time.time() + 5

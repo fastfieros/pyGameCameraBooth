@@ -67,11 +67,10 @@ def captureAndDownload(q):
 
 		elif "New file" in line.lower():
 			print "Got line: %s"%line
-			q.put(photo(name=filename))
 			q.put(downloading(progress=0))
 
 	#out of loop? Process has ended
-	q.put(downloading(progress=1))
+	q.put(photo(name=filename))
 
 
 class photoTaker(threading.Thread):
