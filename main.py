@@ -2,150 +2,168 @@
 
 import os,sys,time
 import pygame
-from thumbnail import getThumbnail
 from gphoto import captureAndDownload, registerPhotoEvent, disableAutoOff
 import ubw
 import Queue
 from events import *
 from loadingbox import progressBar, timeoutBar
+from collections import deque
+from states import *
+from config import *
 
-resolution = (1024, 768)
+def init():
+    screen = pygame.display.set_mode(resolution, pygame.FULLSCREEN)
+    pygame.mouse.set_visible(False)
 
-screen = pygame.display.set_mode(resolution, pygame.FULLSCREEN)
-#screen = pygame.display.set_mode((800, 600), pygame.FULLSCREEN)
+    myq = Queue.Queue()
+    myq.put(startover())
 
-running = 1
+    pygame.font.init()
+    myfont      = pygame.font.SysFont("helvetica", 24)
+    consolefont = pygame.font.SysFont("DejaVu Sans Mono", 12)
+    bigfont     = pygame.font.SysFont("helvetica", 125)
+    hugefont    = pygame.font.SysFont("DejaVu Sans", 300)
 
-pygame.mouse.set_visible(False)
+    preview_img    = None               #Last photograph taken
+    thumbnail_imgs = deque(maxlen=6)    #list of thumbnails
+    pe             = None               #pin event
+    countdownEnd   =None
 
-pygame.font.init()
+    running = 1
+    state = STATE_RESET
 
-myq = Queue.Queue()
-myq.put(startover())
+    disableAutoOff()
 
-myfont = pygame.font.SysFont("helvetica", 24)
-consolefont = pygame.font.SysFont("DejaVu Sans Mono", 12)
-bigfont = pygame.font.SysFont("helvetica", 125)
-hugefont = pygame.font.SysFont("DejaVu Sans", 300)
-
-img=None #Last photograph taken
-pe=None  #pin event
-countdownEnd=None
-
-def getImage(original):
-	
-	#print "Thumbing %s"%original
-	thumb = getThumbnail(original, resolution)
-	if not thumb:
-		return None
-
-	#print "finished Thumbing %s, to %s "%(original, thumb)
-	myq.put(preview())
-	return pygame.image.load(thumb)
+def loop()
+    event = pygame.event.poll()
+    if event.type == pygame.QUIT:
+        pe.kill = True
+        running = 0
 
 
-disableAutoOff()
+    ### HANDLE QUEUED TASKS ###
+    screen.fill(background)
+    if not myq.empty():
+        item = myq.get_nowait()
 
-state = 0
-try:
-	while running:
-		event = pygame.event.poll()
-		if event.type == pygame.QUIT:
-			pe.kill = True
-			running = 0
+        if item.type == "startover":
+            state = STATE_RESET
+            pe = ubw.registerPinEvent(myq)
 
+        elif item.type == "press":
+            state = STATE_COUNTDOWN
+            countdownEnd = time.time() + timer_secs
 
-		### HANDLE QUEUED TASKS ###
-		screen.fill((32,32,32))
-		if not myq.empty():
-			item = myq.get_nowait()
+        elif item.type == "photo":
+            if not item.name:
+                pe.kill = True
+                state = STATE_ERROR
+                message = item.message
 
-			if item.type == "startover":
-				state = 0
-				pe = ubw.registerPinEvent(myq)
+            else:
+                state = STATE_PROCESS
 
-			elif item.type == "press":
-				state = 3
-				countdownEnd = time.time() + 5
+        elif item.type == "downloading":
+            state = STATE_TRANSFER
 
-			elif item.type == "photo":
-				if not item.name:
-					pe.kill = True
-					state = 99
-					message = item.message
-				else:
-					img = getImage(item.name)
-					countdownEnd = time.time() + 5
-					state=6
+        elif item.type == "preview":
+            countdownEnd = time.time() + preview_secs
+            preview_img = item.image 
+            state = STATE_PREVIEW
 
-			elif item.type == "downloading":
-				state=1
-
-			elif item.type == "preview":
-				countdownEnd = time.time() + 5
-				state = 6
+        elif item.type == "thumbnail":
+            thumbnail_imgs.pppend(item.image)
+            # no state change.
 
 
-		### GENERATE DISPLAY BASED ON STATE ####
+    ### GENERATE DISPLAY BASED ON STATE ####
 
-		if state == 0:
-			label = myfont.render("Press button to capture!", 1, (255,255,0))
-			screen.blit(label, (40,540))
+    if state == STATE_RESET:
+        label = myfont.render("Press button to capture!", 1, (255,255,0))
+        screen.blit(label, (40,540))
 
-			# show last 5 or so images!
-			#if miniImg:
-			#	screen.blit(img, (0,0))
+        #show last 6 images!
+        for i,img in enumerage(thumbnail_imgs):
+            x = 50 + (200 + 25) * i
+            y = 50 + (300 + 25) * i%3 
+            screen.blit(img, (x,y))
 
-		elif state == 3 or state == 4:
-			timeleft = countdownEnd - time.time() 
-			if state == 3 and timeleft <= 1.2:
-				registerPhotoEvent(myq)
-				state = 4
+    elif state == STATE_COUNTDOWN:
 
-			#if state == 4 and timeleft <= 0:
-			#	timebar = timeoutBar(screen, 4.8)
-			#	state = 1
+        timeleft = countdownEnd - time.time() 
+        if timeleft <= capture_secs
+            #Start capture n seconds before timer runs out
+            registerPhotoEvent(myq)
 
-			else:
-				label = hugefont.render("%.1f"%timeleft, 1, (0,255,0))
-				screen.blit(label, (120,120))
+        if timeleft >= 0:
+            #Provide countdown until capture
+            label = hugefont.render("%.1f"%timeleft, 1, (0,255,0))
+            screen.blit(label, (120,120))
+
+        else:
+            state = STATE_CAPTURE
+
+    elif state == STATE_CAPTURE:
+        #Update user w/ status info
+        dots = "."*(int(time.time())%3)
+        label = myfont.render("Capturing picture%s"%dots, 1, (255,0,255))
+        screen.blit(label, (40,540))
+
+    elif state == STATE_TRANSFER:
+        #Update user w/ status info
+        dots = "."*(int(time.time())%3)
+        label = myfont.render("transferring picture%s"%dots, 1, (255,255,0))
+        screen.blit(label, (40,540))
+
+    elif state == STATE_PROCESS:
+        #Update user w/ status info
+        dots = "."*(int(time.time())%3)
+        label = myfont.render("processing picture%s"%dots, 1, (0,255,255))
+        screen.blit(label, (40,540))
+
+    elif state == STATE_PREVIEW:
+        # display the image 'preview' until countdown expires
+        screen.blit(preview_img, (0,0))
+
+        # When countdown expires, start over :)
+        timeleft = countdownEnd - time.time() 
+        if timeleft <= 0:
+            myq.put(startover())
+
+    ## ERROR STATE ##
+    elif state == STATE_ERROR:
+        label = bigfont.render("ERROR!!", 1, (255,0,0))
+        screen.blit(label, (40,40))
+
+        #parse the message so it fits on the screen
+        i=0
+        for m in message.split('\n'):
+            for j ,x in enumerate(range(0,len(m),80)):
+                label = consolefont.render(m[j*80:(j+1)*80], 1, (255,255,0))
+                left = (j==0 and 40 or 80)	
+                down = 130+(i*20)
+                screen.blit(label, (left, down))
+                i+=1
+                
+        #if the press event was just killed, start a new one :)
+        if pe.kill:
+            pe = ubw.registerPinEvent(myq)
+        else:
+            label = myfont.render("press button to continue.", 1, (255,255,0))
+            screen.blit(label, (40,540))
 
 
-		elif state == 1:
-			label = myfont.render("transferring picture..", 1, (255,255,0))
-			screen.blit(label, (40,540))
-
-		elif state == 6:
-			timeleft = countdownEnd - time.time() 
-			screen.blit(img, (0,0))
-
-			if timeleft <= 0:
-				myq.put(startover())
-
-		## ERROR STATE ##
-		elif state == 99:
-			label = bigfont.render("ERROR!!", 1, (255,0,0))
-			screen.blit(label, (40,40))
-
-			i=0
-			for m in message.split('\n'):
-				for j ,x in enumerate(range(0,len(m),80)):
-					label = consolefont.render(m[j*80:(j+1)*80], 1, (255,255,0))
-					left = (j==0 and 40 or 80)	
-					down = 130+(i*20)
-					screen.blit(label, (left, down))
-					i+=1
-					
-			#if the press event was just killed, start a new one :)
-			if pe.kill:
-				pe = ubw.registerPinEvent(myq)
-			else:
-				label = myfont.render("waiting for button press..", 1, (255,255,0))
-				screen.blit(label, (40,540))
+    pygame.display.flip()
 
 
-		pygame.display.flip()
 
-except KeyboardInterrupt as ke:
-	pe.kill = True		
+if __name == "__main__":
 
+    init()
+
+    try:
+        while running:
+            loop()
+
+    except KeyboardInterrupt as ke:
+    	pe.kill = True		

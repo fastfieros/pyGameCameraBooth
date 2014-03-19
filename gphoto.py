@@ -5,8 +5,18 @@ import time
 import threading
 import Queue
 from events import *
+from thumbnail import getThumbnail
 
 exe = "gphoto2"
+
+def getImage(original, resolution, q):
+
+	#print "Thumbing %s"%original
+	prvw = getThumbnail(original, resolution)
+	if not prvw:
+	    return None
+
+    return prvw
 
 
 def disableAutoOff():
@@ -67,11 +77,16 @@ def captureAndDownload(q):
 
 		elif "New file" in line.lower():
 			print "Got line: %s"%line
-			q.put(downloading(progress=0))
+			q.put(downloading())
 
-	#out of loop? Process has ended
+	#out of loop? Process has ended. Generate the thumbnails!
 	q.put(photo(name=filename))
 
+    #when getImage finishes, add a 'preview' event to the queue
+	q.put(preview(pygame.image.load(getImage(filename, (1024,768)))))
+
+    #continue generating thumbnail in background
+	q.put(thumbnail(pygame.image.load(getImage(filename, (200,300)))))
 
 class photoTaker(threading.Thread):
 	def __init__(self, q=None):
