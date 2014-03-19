@@ -1,13 +1,17 @@
 #!/usr/bin/env python
 
-import os,sys,time
+#System Libraries
+import time
 import pygame
-from gphoto import captureAndDownload, registerPhotoEvent, disableAutoOff
-import ubw
+
+#Data structures
 import Queue
-from events import *
-from loadingbox import progressBar, timeoutBar
 from collections import deque
+
+#Project Files
+import ubw
+from gphoto import *
+from events import *
 from states import *
 from config import *
 
@@ -27,14 +31,14 @@ def init():
     preview_img    = None               #Last photograph taken
     thumbnail_imgs = deque(maxlen=6)    #list of thumbnails
     pe             = None               #pin event
-    countdownEnd   =None
+    countdownEnd   = None
 
     running = 1
     state = STATE_RESET
 
     disableAutoOff()
 
-def loop()
+def loop():
     event = pygame.event.poll()
     if event.type == pygame.QUIT:
         pe.kill = True
@@ -157,7 +161,7 @@ def loop()
 
 
 
-if __name == "__main__":
+if __name__ == "__main__":
 
     init()
 

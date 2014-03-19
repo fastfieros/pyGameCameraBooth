@@ -6,3 +6,5 @@ STATE_PROCESS   = 40 #7
 STATE_PREVIEW   = 50 #6
 
 STATE_ERROR     = 99
+
+running=None

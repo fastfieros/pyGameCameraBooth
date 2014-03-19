@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 
-import os,sys
+import os
 import Image
 
 def getThumbnail(infile, size=(800,600)):
