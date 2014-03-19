@@ -176,8 +176,13 @@ def loop():
 
         #show last 6 images!
         for i,img in enumerate(thumbnail_imgs):
-            x = 50 + (200 + 25) * i%3
-            y = 50 + (300 + 25) * i%2
+	    if i<3:
+            	x = 150 + (225 * i)
+		y = 150
+            else:
+            	x = 150 + (225 * (i-3))
+                y = 350
+
             screen.blit(img, (x,y))
 
     elif state == STATE_COUNTDOWN:
@@ -205,21 +210,21 @@ def loop():
 	    #Update user w/ status info
 	    dots = "."*(int(time.time())%3)
 	    label = myfont.render("Capturing picture%s"%dots, 1, (255,0,255))
-	    screen.blit(label, (40,540))
+	    screen.blit(label, (450,450))
 
     elif state == STATE_TRANSFER:
         #Update user w/ status info
 	transferAnimation()
         dots = "."*(int(time.time())%3)
         label = myfont.render("transferring picture%s"%dots, 1, (255,255,0))
-        screen.blit(label, (40,540))
+        screen.blit(label, (450,450))
 
     elif state == STATE_PROCESS:
 	transferAnimation()
         #Update user w/ status info
         dots = "."*(int(time.time())%3)
         label = myfont.render("processing picture%s"%dots, 1, (0,255,255))
-        screen.blit(label, (40,540))
+        screen.blit(label, (450,450))
 
     elif state == STATE_PREVIEW:
         # display the image 'preview' until countdown expires
