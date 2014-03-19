@@ -4,6 +4,7 @@ import subprocess
 import time
 import threading
 import Queue
+import pygame
 from events import *
 from thumbnail import getThumbnail
 
@@ -14,9 +15,9 @@ def getImage(original, resolution, q):
 	#print "Thumbing %s"%original
 	prvw = getThumbnail(original, resolution)
 	if not prvw:
-	    return None
+		return None
 
-    return prvw
+	return prvw
 
 
 def disableAutoOff():
@@ -57,6 +58,7 @@ def captureAndDownload(q):
 
 		#get a line of text from the process, blocking.
 		line = proc.stdout.readline()
+		#print "line in: %s"%line
 
 		#check output strings for 'error'
 		if "error" in line.lower():
@@ -75,18 +77,21 @@ def captureAndDownload(q):
 			return False
 
 
-		elif "New file" in line.lower():
-			print "Got line: %s"%line
+		elif "New file" in line:
+			#print "adding downloading"
 			q.put(downloading())
 
 	#out of loop? Process has ended. Generate the thumbnails!
+	#print "adding photo"
+	time.sleep(2)
 	q.put(photo(name=filename))
 
-    #when getImage finishes, add a 'preview' event to the queue
-	q.put(preview(pygame.image.load(getImage(filename, (1024,768)))))
+	#when getImage finishes, add a 'preview' event to the queue
+	#print "adding preview"
+	q.put(preview(pygame.image.load(getImage(filename, (1024,768), q))))
 
-    #continue generating thumbnail in background
-	q.put(thumbnail(pygame.image.load(getImage(filename, (200,300)))))
+	#continue generating thumbnail in background
+	q.put(thumbnail(pygame.image.load(getImage(filename, (200,300), q))))
 
 class photoTaker(threading.Thread):
 	def __init__(self, q=None):

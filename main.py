@@ -3,6 +3,7 @@
 #System Libraries
 import time
 import pygame
+import random
 
 #Data structures
 import Queue
@@ -16,6 +17,22 @@ from states import *
 from config import *
 
 def init():
+    global screen
+    global myq
+    global myfont    
+    global consolefont
+    global bigfont   
+    global hugefont   
+    global preview_img  
+    global thumbnail_imgs
+    global pe         
+    global countdownEnd
+    global running
+    global state
+    global startTime
+    global tv_img
+    global camera_img
+
     screen = pygame.display.set_mode(resolution, pygame.FULLSCREEN)
     pygame.mouse.set_visible(False)
 
@@ -32,13 +49,84 @@ def init():
     thumbnail_imgs = deque(maxlen=6)    #list of thumbnails
     pe             = None               #pin event
     countdownEnd   = None
+    camera_img    = pygame.image.load("camera.png")
+    tv_img        = pygame.image.load("tv.png")
+
+    startTime=time.time()
 
     running = 1
     state = STATE_RESET
 
     disableAutoOff()
 
+def transferAnimation():
+    global screen
+    global myq
+    global myfont    
+    global consolefont
+    global bigfont   
+    global hugefont   
+    global preview_img  
+    global thumbnail_imgs
+    global pe         
+    global countdownEnd
+    global running
+    global state
+    global startTime
+    global tv_img
+    global camera_img
+
+    s = pygame.Surface((1024,768), flags=pygame.SRCALPHA)
+    t = time.time()
+    camera_end = 300
+    screen_start = 675
+
+    #label = myfont.render("time :%.2f"%t, 1, (255,0,0))
+    #s.blit(label, (40,40))
+
+    #draw the channel on the bottom
+    pygame.draw.rect(s, (16,16,16), pygame.Rect(camera_end, 400, screen_start-camera_end, 50))
+
+    #then draw circles on the channel
+    num = 16 
+    delta = int(500/num)
+    for j in range(4):
+        for i in range(num):
+            circlex = camera_end - delta - (j*16) + (i*delta) + int((time.time() - startTime) * 50) %delta 
+            c = 40+i*((256-40)/num)
+            color = (c,c,c)
+            #pygame.draw.circle(s, color, (circlex,425), 18, 5)
+            bit = consolefont.render("%d"%random.randint(0,1), 1, color)
+            s.blit(bit, (circlex, 400 + j*12))
+
+    #then draw the icons
+    s.blit(camera_img, (10, 265))
+    s.blit(tv_img, (600, 250))
+
+    #then draw the lines
+    pygame.draw.line(s, (0,0,0), (camera_end,400), (screen_start,400), 5)
+    pygame.draw.line(s, (0,0,0), (camera_end,450), (screen_start,450), 5)
+    
+    screen.blit(s, (0,0))
+
+
 def loop():
+    global screen
+    global myq
+    global myfont    
+    global consolefont
+    global bigfont   
+    global hugefont   
+    global preview_img  
+    global thumbnail_imgs
+    global pe         
+    global countdownEnd
+    global running
+    global state
+    global startTime
+    global tv_img
+    global camera_img
+
     event = pygame.event.poll()
     if event.type == pygame.QUIT:
         pe.kill = True
@@ -76,7 +164,7 @@ def loop():
             state = STATE_PREVIEW
 
         elif item.type == "thumbnail":
-            thumbnail_imgs.pppend(item.image)
+            thumbnail_imgs.append(item.image)
             # no state change.
 
 
@@ -87,39 +175,47 @@ def loop():
         screen.blit(label, (40,540))
 
         #show last 6 images!
-        for i,img in enumerage(thumbnail_imgs):
-            x = 50 + (200 + 25) * i
-            y = 50 + (300 + 25) * i%3 
+        for i,img in enumerate(thumbnail_imgs):
+            x = 50 + (200 + 25) * i%3
+            y = 50 + (300 + 25) * i%2
             screen.blit(img, (x,y))
 
     elif state == STATE_COUNTDOWN:
 
         timeleft = countdownEnd - time.time() 
-        if timeleft <= capture_secs
+        if timeleft <= capture_secs:
             #Start capture n seconds before timer runs out
             registerPhotoEvent(myq)
+            state = STATE_CAPTURE
 
+	else:
+            #Provide countdown until capture
+            label = hugefont.render("%.1f"%timeleft, 1, (0,255,0))
+            screen.blit(label, (120,120))
+
+    elif state == STATE_CAPTURE:
+
+        timeleft = countdownEnd - time.time() 
         if timeleft >= 0:
             #Provide countdown until capture
             label = hugefont.render("%.1f"%timeleft, 1, (0,255,0))
             screen.blit(label, (120,120))
 
-        else:
-            state = STATE_CAPTURE
-
-    elif state == STATE_CAPTURE:
-        #Update user w/ status info
-        dots = "."*(int(time.time())%3)
-        label = myfont.render("Capturing picture%s"%dots, 1, (255,0,255))
-        screen.blit(label, (40,540))
+	else:
+	    #Update user w/ status info
+	    dots = "."*(int(time.time())%3)
+	    label = myfont.render("Capturing picture%s"%dots, 1, (255,0,255))
+	    screen.blit(label, (40,540))
 
     elif state == STATE_TRANSFER:
         #Update user w/ status info
+	transferAnimation()
         dots = "."*(int(time.time())%3)
         label = myfont.render("transferring picture%s"%dots, 1, (255,255,0))
         screen.blit(label, (40,540))
 
     elif state == STATE_PROCESS:
+	transferAnimation()
         #Update user w/ status info
         dots = "."*(int(time.time())%3)
         label = myfont.render("processing picture%s"%dots, 1, (0,255,255))

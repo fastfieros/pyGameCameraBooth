@@ -28,10 +28,10 @@ class photo(event):
 		
 class preview(event):
 	type="preview"
-    image = None
+	image = None
 
 	def __init__(self, image=None):
-        self.image=image
+		self.image=image
 
 class thumbnail(preview):
-    type="thumbnail"
+	type="thumbnail"
