@@ -3,6 +3,7 @@
 #System Libraries
 import time
 import pygame
+import random
 
 #Data structures
 import Queue
@@ -18,6 +19,7 @@ pygame.mouse.set_visible(False)
 
 pygame.font.init()
 myfont      = pygame.font.SysFont("helvetica", 24)
+pcfont      = pygame.font.SysFont("courier new", 48)
 
 camera_img    = pygame.image.load("camera.png")
 tv_img        = pygame.image.load("tv.png")
@@ -44,11 +46,15 @@ def loop():
     pygame.draw.rect(s, (16,16,16), pygame.Rect(camera_end, 400, screen_start-camera_end, 50))
 
     #then draw circles on the channel
-    for i in range(6):
-        circlex = camera_end - 90 + (i*90) + int((time.time() - start) * 100) % 90
-        c = 20+i*30
+    num = 10 
+    delta = int(500/num)
+    for i in range(num):
+        circlex = camera_end - delta + (i*delta) + int((time.time() - start) * 50) %delta 
+        c = 40+i*((256-40)/num)
         color = (c,c,c)
-        pygame.draw.circle(s, color, (circlex,425), 18, 5)
+        #pygame.draw.circle(s, color, (circlex,425), 18, 5)
+        bit = pcfont.render("%d"%random.randint(0,1), 1, color)
+        s.blit(bit, (circlex, 400))
 
     #then draw the icons
     s.blit(camera_img, (10, 265))
