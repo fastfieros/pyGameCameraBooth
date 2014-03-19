@@ -34,16 +34,21 @@ def loop():
     screen.fill((32,32,32))
     s = pygame.Surface((1024,768), flags=pygame.SRCALPHA)
     t = time.time()
-
-    label = myfont.render("time :%f"%t, 1, (255,0,0))
-    s.blit(label, (40,40))
-
-    #draw circles on the bottom
     camera_end = 300
     screen_start = 675
+
+    label = myfont.render("time :%.2f"%t, 1, (255,0,0))
+    s.blit(label, (40,40))
+
+    #draw the channel on the bottom
+    pygame.draw.rect(s, (16,16,16), pygame.Rect(camera_end, 400, screen_start-camera_end, 50))
+
+    #then draw circles on the channel
     for i in range(6):
         circlex = camera_end - 90 + (i*90) + int((time.time() - start) * 100) % 90
-        pygame.draw.circle(s, (200,200,200), (circlex,425), 20, 5)
+        c = 20+i*30
+        color = (c,c,c)
+        pygame.draw.circle(s, color, (circlex,425), 18, 5)
 
     #then draw the icons
     s.blit(camera_img, (10, 265))
