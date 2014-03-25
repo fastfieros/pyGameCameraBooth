@@ -140,10 +140,12 @@ def loop():
 
         if item.type == "startover":
             state = STATE_RESET
+            pe.setLed()
             pe = ubw.registerPinEvent(myq)
 
         elif item.type == "press":
             state = STATE_COUNTDOWN
+            pe.clearLed()
             countdownEnd = time.time() + timer_secs
 
         elif item.type == "photo":
@@ -161,6 +163,7 @@ def loop():
         elif item.type == "preview":
             countdownEnd = time.time() + preview_secs
             preview_img = item.image 
+            pe.dim()
             state = STATE_PREVIEW
 
         elif item.type == "thumbnail":

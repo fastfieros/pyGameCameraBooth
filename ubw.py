@@ -18,13 +18,56 @@ class flag():
 class ubw(threading.Thread):
 
 	DEVICE = "/dev/ttyACM0"
-	PROBE  = "PI,C,2\r"
-	MATCH  = "PI,0\r\n"
+    sleep = 0.1
+
+    button_source_port = 'B' #??
+    button_source_pin = '2'  #??
+
+    button_read_port = 'B'   #??
+    button_read_pin = '3'    #??
+
+    button_led_port = 'A'    #??
+    button_led_pin = '0'     #??
+
+    output = '0'
+    input = '1' 
+
+    on = '1'
+    off = '0'
+
 	kill=False
 
 	def __init__(self, q=None, flag=None):
 
-		self.sleep = 0.1
+        self.writelock = threading.Lock()
+        self.setup_button_source_0 = "PD,%s,%s,%s\r\n"%(
+                self.button_source_port,
+                self.button_source_pin,
+                self.output)
+
+        self.setup_button_source_1 = "PO,%s,%s,%s\r\n"%(
+                self.button_source_port,
+                self.button_source_pin,
+                self.on)
+
+        self.setup_button_read = "PD,%s,%s,%s\r\n"%(
+                self.button_read_port,
+                self.button_read_pin,
+                self.input)
+
+        self.setup_button_led = "PD,%s,%s,%s\r\n"%(
+                self.button_led_port,
+                self.button_led_pin,
+                self.output)
+
+
+        self.probe_button_state = "PI,%s,%s\r\n"%(
+                self.button_read_port,
+                self.button_read_pin)
+
+        self.match_button_state = "PI,%s,\r\n"%(self.off)
+
+
 		self.flag = flag
 
 		self.ser = serial.Serial(port=self.DEVICE, 
@@ -34,15 +77,45 @@ class ubw(threading.Thread):
 			    stopbits=serial.STOPBITS_ONE,
 			    timeout=5 )
 
+        self.send(self.setup_button_source_0)
+        self.send(self.setup_button_source_1)
+        self.send(self.setup_button_read)
+        self.send(self.setup_button_led)
+
 		self.q = q
 		threading.Thread.__init__(self)
 
+    def send(data):
+        #Don't write data while background tasks are writing data..
+        self.writelock.acquire()
+        self.ser.write(data)
+        self.writelock.release()
+
+
+    def setLed():
+        button_led_set = "PO,%s,%s,%s\r\n"%(self.button_led_port, self.button_led_pin,self.on)
+        self.send(button_led_set)
+
+    def clearLed():
+        button_led_set = "PO,%s,%s,%s\r\n"%(self.button_led_port, self.button_led_pin,self.off)
+        self.send(button_led_set)
+
+    def dimLed(value):
+
+        freq = "120"
+        freqCMD = "F,%s,%s,%s\r\n"%(freq,
+                self.button_led_port,
+                self.button_led_pin)
+
+        self.send(freqCMD)
+
+
 	def checkPin(self):
-		self.ser.write(self.PROBE)
+		self.send(self.probe_button_state)
 
 		try:
 			line = self.ser.readline()
-			return line == self.MATCH
+			return line == self.match_button_state
 
 		except serial.SerialTimeoutException as ste:
 			return False	
