@@ -163,7 +163,6 @@ def loop():
         elif item.type == "preview":
             countdownEnd = time.time() + preview_secs
             preview_img = item.image 
-            pe.dim()
             state = STATE_PREVIEW
 
         elif item.type == "thumbnail":
