@@ -80,27 +80,27 @@ class ubw(threading.Thread):
                 timeout=5 )
 
         self.send("R\r\n") #reset the device
-        line = self.ser.readline()
+        line = self.getLine()
         if "OK" not in line:
             print "Failed to reset", line
 
         self.send(self.setup_button_source_0)
-        line = self.ser.readline()
+        line = self.getLine()
         if "OK" not in line:
             print "Failed to setup button source 0", line
 
         self.send(self.setup_button_source_1)
-        line = self.ser.readline()
+        line = self.getLine()
         if "OK" not in line:
             print "Failed to setup button source 1", line
 
         self.send(self.setup_button_read)
-        line = self.ser.readline()
+        line = self.getLine()
         if "OK" not in line:
             print "Failed to setup button read", line
 
         self.send(self.setup_button_led)
-        line = self.ser.readline()
+        line = self.getLine()
         if "OK" not in line:
             print "Failed to setup button led", line
 
@@ -108,22 +108,34 @@ class ubw(threading.Thread):
         threading.Thread.__init__(self)
 
     def send(self, data):
-        #Don't write data while background tasks are writing data..
+        #Don't read or  write data while background tasks are writing data..
         self.writelock.acquire()
         self.ser.write(data)
         self.writelock.release()
 
+    def getLine(self):
+        #Don't read or write data while background tasks are writing data..
+        line = None
+        try:
+            self.writelock.acquire()
+            line = self.ser.readline()
+
+        except serial.SerialException as se:
+            print "GOT EXCEPTION: ",se
+
+        self.writelock.release()
+        return line
 
     def setLed(self):
         button_led_set = "PO,%s,%s,%s\r\n"%(self.button_led_port, self.button_led_pin,self.on)
         self.send(button_led_set)
-        line = self.ser.readline()
+        line = self.getLine()
         return "OK" in line
 
     def clearLed(self):
         button_led_set = "PO,%s,%s,%s\r\n"%(self.button_led_port, self.button_led_pin,self.off)
         self.send(button_led_set)
-        line = self.ser.readline()
+        line = self.getLine()
         return "OK" in line
 
     def dimLed(self, percent):
@@ -136,7 +148,7 @@ class ubw(threading.Thread):
 
         self.send(freqCMD)
 
-        line = self.ser.readline()
+        line = self.getLine()
         return "OK" in line
 
 
@@ -144,11 +156,12 @@ class ubw(threading.Thread):
         self.send(self.probe_button_state)
 
         try:
-            line = self.ser.readline()
+            line = self.getLine()
             return line == self.match_button_state
 
         except serial.SerialTimeoutException as ste:
             return False
+
 
     def waitForPin(self):
 

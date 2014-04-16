@@ -54,11 +54,12 @@ def captureAndDownload(q):
 			stderr=subprocess.PIPE)
 
 	#loop over proc while it's alive!
+	gotPhoto = False
 	while proc.poll() == None:
 
 		#get a line of text from the process, blocking.
 		line = proc.stdout.readline()
-		#print "line in: %s"%line
+		print "line in: %s"%line
 
 		#check output strings for 'error'
 		if "error" in line.lower():
@@ -67,10 +68,9 @@ def captureAndDownload(q):
 			proc.kill()
 
 			#return the error
-			q.put( photo(
-				name = None,
-				message = line + str(proc.stdout.read()) + str( proc.stderr.read())
-				))
+			pht = photo( name = None )
+			pht.message = line + str(proc.stdout.read()) + str( proc.stderr.read())
+			q.put(pht)
 
 			#because of error, we don't want to add any
 			#  downloadings to the queue
@@ -78,8 +78,21 @@ def captureAndDownload(q):
 
 
 		elif "New file" in line:
+			gotPhoto = True
 			#print "adding downloading"
 			q.put(downloading())
+
+	if not gotPhoto: #uh oh - error time
+
+		#return the error
+		pht = photo( name = None )
+		pht.message = "No image captured - camera might not have been able to focus"
+		q.put(pht)
+
+		#because of error, we don't want to add any
+		#  downloadings to the queue
+		return False
+		
 
 	#out of loop? Process has ended. Generate the thumbnails!
 	#print "adding photo"

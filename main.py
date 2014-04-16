@@ -33,7 +33,7 @@ def init():
     global tv_img
     global camera_img
 
-    screen = pygame.display.set_mode(resolution, pygame.FULLSCREEN)
+    screen = pygame.display.set_mode(resolution, pygame.FULLSCREEN )
     pygame.mouse.set_visible(False)
 
     myq = Queue.Queue()
@@ -43,7 +43,7 @@ def init():
     myfont      = pygame.font.SysFont("helvetica", 24)
     consolefont = pygame.font.SysFont("DejaVu Sans Mono", 12)
     bigfont     = pygame.font.SysFont("helvetica", 125)
-    hugefont    = pygame.font.SysFont("DejaVu Sans", 300)
+    hugefont    = pygame.font.SysFont("DejaVu Sans", 480)
 
     preview_img    = None               #Last photograph taken
     thumbnail_imgs = deque(maxlen=6)    #list of thumbnails
@@ -104,8 +104,8 @@ def transferAnimation():
     s.blit(tv_img, (600, 250))
 
     #then draw the lines
-    pygame.draw.line(s, (0,0,0), (camera_end,400), (screen_start,400), 5)
-    pygame.draw.line(s, (0,0,0), (camera_end,450), (screen_start,450), 5)
+    pygame.draw.line(s, (64,64,64), (camera_end,400), (screen_start,400), 5)
+    pygame.draw.line(s, (64,64,64), (camera_end,450), (screen_start,450), 5)
     
     screen.blit(s, (0,0))
 
@@ -126,6 +126,7 @@ def loop():
     global startTime
     global tv_img
     global camera_img
+    global message
 
     event = pygame.event.poll()
     if event.type == pygame.QUIT:
@@ -140,8 +141,8 @@ def loop():
 
         if item.type == "startover":
             state = STATE_RESET
-            pe.setLed()
             pe = ubw.registerPinEvent(myq)
+            pe.setLed()
 
         elif item.type == "press":
             state = STATE_COUNTDOWN
@@ -149,7 +150,7 @@ def loop():
             countdownEnd = time.time() + timer_secs
 
         elif item.type == "photo":
-            if not item.name:
+            if item.name is None:
                 pe.kill = True
                 state = STATE_ERROR
                 message = item.message
@@ -174,16 +175,27 @@ def loop():
 
     if state == STATE_RESET:
         label = myfont.render("Press button to capture!", 1, (255,255,0))
-        screen.blit(label, (40,540))
+
+        lx = 40
+        if int(round(time.time()/60))%2 == 0: #even minutes
+            ly = 720
+            iy0 = 150
+            iy1 = 350
+        else:
+            ly=40
+            iy0 = 350
+            iy1 = 550
+
+        screen.blit(label, (lx,ly))
 
         #show last 6 images!
         for i,img in enumerate(thumbnail_imgs):
-	    if i<3:
-            	x = 150 + (225 * i)
-		y = 150
+            if i<3:
+                x = 150 + (225 * i)
+                y = iy0
             else:
-            	x = 150 + (225 * (i-3))
-                y = 350
+                x = 150 + (225 * (i-3))
+                y = iy1
 
             screen.blit(img, (x,y))
 
@@ -195,7 +207,7 @@ def loop():
             registerPhotoEvent(myq)
             state = STATE_CAPTURE
 
-	else:
+        else:
             #Provide countdown until capture
             label = hugefont.render("%.1f"%timeleft, 1, (0,255,0))
             screen.blit(label, (120,120))
@@ -208,21 +220,21 @@ def loop():
             label = hugefont.render("%.1f"%timeleft, 1, (0,255,0))
             screen.blit(label, (120,120))
 
-	else:
-	    #Update user w/ status info
-	    dots = "."*(int(time.time())%3)
-	    label = myfont.render("Capturing picture%s"%dots, 1, (255,0,255))
-	    screen.blit(label, (450,450))
+        else:
+            #Update user w/ status info
+            dots = "."*(int(time.time())%3)
+            label = myfont.render("Capturing picture%s"%dots, 1, (255,0,255))
+            screen.blit(label, (450,450))
 
     elif state == STATE_TRANSFER:
         #Update user w/ status info
-	transferAnimation()
+        transferAnimation()
         dots = "."*(int(time.time())%3)
         label = myfont.render("transferring picture%s"%dots, 1, (255,255,0))
         screen.blit(label, (450,450))
 
     elif state == STATE_PROCESS:
-	transferAnimation()
+        transferAnimation()
         #Update user w/ status info
         dots = "."*(int(time.time())%3)
         label = myfont.render("processing picture%s"%dots, 1, (0,255,255))
@@ -247,8 +259,8 @@ def loop():
         for m in message.split('\n'):
             for j ,x in enumerate(range(0,len(m),80)):
                 label = consolefont.render(m[j*80:(j+1)*80], 1, (255,255,0))
-                left = (j==0 and 40 or 80)	
-                down = 130+(i*20)
+                left = (j==0 and 40 or 80)  
+                down = 230+(i*20)
                 screen.blit(label, (left, down))
                 i+=1
                 
@@ -273,4 +285,4 @@ if __name__ == "__main__":
             loop()
 
     except KeyboardInterrupt as ke:
-    	pe.kill = True		
+        pe.kill = True      
