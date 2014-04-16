@@ -86,7 +86,7 @@ def captureAndDownload(q):
 
 		#return the error
 		pht = photo( name = None )
-		pht.message = "No image captured - camera might not have been able to focus"
+		pht.message = "No image captured - camera might be sleeping or not have been able to focus"
 		q.put(pht)
 
 		#because of error, we don't want to add any
